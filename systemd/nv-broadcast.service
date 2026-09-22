@@ -1,0 +1,12 @@
+[Unit]
+Description=NV Broadcast virtual denoised microphone
+After=pipewire.service pipewire-pulse.service wireplumber.service
+Wants=pipewire.service
+
+[Service]
+ExecStart=%h/.local/bin/nvbcastd %h/.config/nv-broadcast/config.toml
+Restart=on-failure
+Nice=-10
+
+[Install]
+WantedBy=default.target
