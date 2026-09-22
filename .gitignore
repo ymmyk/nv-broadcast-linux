@@ -1,0 +1,29 @@
+# Out-of-source CMake builds
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+
+# Compiled objects / libs
+*.o
+*.a
+*.so
+*.so.*
+
+# Downloaded GPU-model blobs (Maxine .trtpkg, ONNX) — fetched by scripts/, never committed
+models/
+*.trtpkg
+*.onnx
+
+# Local test recordings
+*.wav
+
+# Editor noise
+.vscode/
+.idea/
+*~
+*.swp

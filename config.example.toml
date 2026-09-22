@@ -1,0 +1,18 @@
+# nv-broadcast-linux example config.
+# Copy to ~/.config/nv-broadcast/config.toml and edit.
+
+input_device  = ""                  # empty = default source; see `nvbcast list`
+output_name   = "NV-Broadcast-Mic"  # virtual mic name apps will select
+sample_rate   = 48000
+frame_ms      = 10
+channels      = 1
+
+[denoise]
+backend         = "rnnoise"  # "rnnoise" now; "cuda" = Phase-2 GPU backend stub
+suppression_db  = 24.0       # broadband suppression depth
+vad_threshold   = 0.5        # voice activity gate 0..1 (higher = stricter)
+keyboard_boost  = 0.6        # 0..1 extra attenuation on key-click transients
+
+[cuda]
+device_id = 0
+model     = "deepfilternet"  # or "maxine" once implemented
