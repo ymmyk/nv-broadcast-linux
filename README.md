@@ -79,6 +79,8 @@ extra attenuation on detected key-click transients.
 
 ## GUI
 
+![nvbcast-gui screenshot](docs/screenshot-gui.png)
+
 ```bash
 sudo pacman -S --needed gtk4 libadwaita   # dev files for the GUI target
 cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
@@ -105,6 +107,29 @@ src/nvbcast.cpp           CLI: list/get/set/enable/disable/status
 systemd/nv-broadcast.service
 scripts/install.sh
 ```
+
+## Maxine GPU backend (Broadcast-quality)
+
+```bash
+# 1. NVIDIA Developer account -> download Audio Effects SDK for Linux
+#    (accept the Maxine EULA) -> extract:
+mkdir -p ~/.local/share/nv-broadcast
+tar xf Audio_Effects_SDK_Linux.tar.gz -C ~/.local/share/nv-broadcast/maxine
+# expect: maxine/lib/libnv_audio_effects.so, maxine/models/denoiser_48k.trtpkg
+
+# 2. If the .so complains about missing libcudart:
+sudo pacman -S cuda   # full toolkit; only needed if ldd shows cudart missing
+
+# 3. Switch backends (GUI, or CLI):
+nvbcast set backend maxine
+nvbcast set maxine_model denoiser_48k   # shorthand for the path above
+systemctl --user restart nv-broadcast.service
+```
+
+No rebuild needed — the backend loads `libnv_audio_effects.so` at runtime.
+First `Load()` takes a few seconds and ~0.5 GB VRAM on the 3090. If a param
+name mismatches your SDK version, the daemon prints the numeric status for
+that exact call — paste it back and the key gets corrected.
 
 ## Notes / limits
 
