@@ -78,6 +78,8 @@ int main(int argc, char** argv) {
     if (k == "input_device") std::cout << cfg.input_device << "\n";
     else if (k == "output_name") std::cout << cfg.output_name << "\n";
     else if (k == "backend") std::cout << cfg.backend << "\n";
+    else if (k == "maxine_model") std::cout << cfg.maxine_model << "\n";
+    else if (k == "maxine_lib") std::cout << cfg.maxine_lib << "\n";
     else if (k == "suppression_db") std::cout << cfg.suppression_db << "\n";
     else if (k == "vad_threshold") std::cout << cfg.vad_threshold << "\n";
     else if (k == "keyboard_boost") std::cout << cfg.keyboard_boost << "\n";
@@ -104,6 +106,9 @@ int main(int argc, char** argv) {
         if (k == "input_device") cfg.input_device = v;
         else if (k == "output_name") cfg.output_name = v;
         else if (k == "backend") cfg.backend = v;
+        else if (k == "maxine_model") cfg.maxine_model = v;
+        else if (k == "maxine_lib") cfg.maxine_lib = v;
+        else if (k == "maxine_effect") cfg.maxine_effect = v;
         else if (k == "suppression_db") cfg.suppression_db = std::stof(v);
         else if (k == "vad_threshold") cfg.vad_threshold = std::stof(v);
         else if (k == "keyboard_boost") cfg.keyboard_boost = std::stof(v);
