@@ -77,6 +77,19 @@ Tuning for keyboard noise: `suppression_db`, `vad_threshold`, and
 `keyboard_boost` in the config. Higher `keyboard_boost` (0.0–1.0) applies
 extra attenuation on detected key-click transients.
 
+## GUI
+
+```bash
+sudo pacman -S --needed gtk4 libadwaita   # dev files for the GUI target
+cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
+./build/nvbcast-gui
+```
+
+Device dropdown, denoise sliders, Start/Stop/Restart, start-on-login switch,
+and live input/output meters + counters. Meters are fed by the daemon's
+status file (`$XDG_RUNTIME_DIR/nv-broadcast-status.json`, 5 Hz); `nvbcast
+status` shows the same telemetry in the terminal.
+
 ## Layout
 
 ```

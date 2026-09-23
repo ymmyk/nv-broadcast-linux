@@ -33,6 +33,7 @@ endif()
 add_library(nvb_common STATIC
   src/common/config.cpp
   src/common/devices.cpp
+  src/common/status.cpp
 )
 target_include_directories(nvb_common PUBLIC src src/common)
 
@@ -61,6 +62,16 @@ add_executable(nvbcast src/nvbcast.cpp)
 target_link_libraries(nvbcast PRIVATE nvb_common)
 
 install(TARGETS nvbcastd nvbcast RUNTIME DESTINATION bin)
+
+# ---- GUI (GTK4 + libadwaita, optional) ----
+pkg_check_modules(GTK IMPORTED_TARGET gtk4 libadwaita-1)
+if(GTK_FOUND)
+  add_executable(nvbcast-gui src/gui/nvbcast_gui.cpp)
+  target_link_libraries(nvbcast-gui PRIVATE nvb_common PkgConfig::GTK)
+  install(TARGETS nvbcast-gui RUNTIME DESTINATION bin)
+else()
+  message(WARNING "gtk4/libadwaita-1 not found; skipping nvbcast-gui")
+endif()
 
 enable_testing()
 add_executable(nvb_tests tests/test_denoise.cpp)

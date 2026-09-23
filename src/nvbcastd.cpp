@@ -5,6 +5,7 @@
 // node.name=cfg.output_name) that apps select as their mic. Both streams
 // negotiate F32/48kHz/mono; PipeWire resamples/downmixes the hardware side
 // automatically. Denoiser runs in 480-sample (10 ms) frames.
+#include <atomic>
 #include <csignal>
 #include <cstdint>
 #include <cstdio>
@@ -18,6 +19,7 @@
 #include <vector>
 
 #include "common/config.h"
+#include "common/status.h"
 #include "denoiser.h"
 
 #ifdef NVB_HAVE_PIPEWIRE
@@ -47,7 +49,17 @@ struct Graph {
   std::deque<float> ring;      // captured samples awaiting denoise
   std::vector<float> pending;  // denoised-but-unwritten spillover
   uint64_t captured = 0, rendered = 0, dropped = 0;
+  std::atomic<float> in_peak{0.0f};   // GUI/CLI meter source
+  std::atomic<float> out_peak{0.0f};
 };
+
+void NotePeak(std::atomic<float>& slot, float block_peak) {
+  float cur = slot.load(std::memory_order_relaxed);
+  while (block_peak > cur &&
+         !slot.compare_exchange_weak(cur, block_peak,
+                                     std::memory_order_relaxed))
+    ;
+}
 
 const struct spa_pod* BuildF32Mono(struct spa_pod_builder* b) {
   struct spa_audio_info_raw info;
@@ -74,6 +86,12 @@ void OnCaptureProcess(void* data) {
     n = bytes / sizeof(float);
   }
   if (samples && n) {
+    float blk = 0.0f;
+    for (uint32_t i = 0; i < n; ++i) {
+      float a = samples[i] < 0 ? -samples[i] : samples[i];
+      if (a > blk) blk = a;
+    }
+    NotePeak(g->in_peak, blk);
     std::lock_guard<std::mutex> lk(g->mu);
     for (uint32_t i = 0; i < n; ++i) g->ring.push_back(samples[i]);
     g->captured += n;
@@ -115,6 +133,12 @@ void OnSourceProcess(void* data) {
       off += kFrame;
     }
     if (off) g->pending.erase(g->pending.begin(), g->pending.begin() + off);
+    float blk = 0.0f;
+    for (uint32_t i = 0; i < wrote; ++i) {
+      float a = out[i] < 0 ? -out[i] : out[i];
+      if (a > blk) blk = a;
+    }
+    NotePeak(g->out_peak, blk);
     // Underrun: pad with silence (mic idle / capture catching up).
     while (wrote < capacity) out[wrote++] = 0.0f;
     g->rendered += wrote;
@@ -212,7 +236,23 @@ int Run(const nvb::AppConfig& cfg, nvb::Denoiser* fx) {
   pw_thread_loop_unlock(loop);
 
   std::cout << "nvbcastd: running (Ctrl-C to stop)\n";
-  while (!g_stop) std::this_thread::sleep_for(std::chrono::milliseconds(200));
+  const std::string status_path = nvb::StatusPath();
+  while (!g_stop) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    nvb::DaemonStatus st;
+    st.running = true;
+    // Publish-and-reset: each write carries the peak of the last 200 ms.
+    st.in_peak = g.in_peak.exchange(0.0f);
+    st.out_peak = g.out_peak.exchange(0.0f);
+    {
+      std::lock_guard<std::mutex> lk(g.mu);
+      st.captured = g.captured;
+      st.rendered = g.rendered;
+      st.dropped = g.dropped;
+    }
+    nvb::WriteStatus(status_path, st);
+  }
+  std::remove(status_path.c_str());  // missing file == stopped for readers
 
   // stop() joins the loop thread, so it must run WITHOUT the loop lock
   // (the loop thread needs that lock to finish its current callback).

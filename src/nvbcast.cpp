@@ -5,6 +5,7 @@
 
 #include "common/config.h"
 #include "common/devices.h"
+#include "common/status.h"
 
 namespace {
 void Usage() {
@@ -55,6 +56,17 @@ int main(int argc, char** argv) {
               << "suppression_db= " << cfg.suppression_db << "\n"
               << "vad_threshold = " << cfg.vad_threshold << "\n"
               << "keyboard_boost= " << cfg.keyboard_boost << "\n";
+    nvb::DaemonStatus live;
+    long age = 0;
+    if (nvb::ReadStatus(nvb::StatusPath(), &live, &age) && live.running &&
+        age < 2000) {
+      std::cout << "daemon        = running (in " << live.in_peak << " / out "
+                << live.out_peak << ", captured " << live.captured
+                << ", rendered " << live.rendered << ", dropped "
+                << live.dropped << ")\n";
+    } else {
+      std::cout << "daemon        = stopped\n";
+    }
     return 0;
   }
   if (cmd == "get") {

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "common/config.h"
+#include "common/status.h"
 #include "denoiser.h"
 
 namespace {
@@ -60,6 +61,30 @@ void TestConfigRoundTrip() {
   printf("TestConfigRoundTrip ok\n");
 }
 
+void TestStatusRoundTrip() {
+  nvb::DaemonStatus st;
+  st.running = true;
+  st.in_peak = 0.5f;
+  st.out_peak = 0.25f;
+  st.captured = 48000;
+  st.rendered = 47520;
+  st.dropped = 480;
+  const std::string path = "/tmp/nvb-test-status.json";
+  assert(nvb::WriteStatus(path, st));
+  nvb::DaemonStatus back;
+  long age = -1;
+  assert(nvb::ReadStatus(path, &back, &age));
+  assert(back.running);
+  assert(std::fabs(back.in_peak - 0.5f) < 1e-6);
+  assert(std::fabs(back.out_peak - 0.25f) < 1e-6);
+  assert(back.captured == 48000 && back.rendered == 47520);
+  assert(back.dropped == 480);
+  assert(age >= 0 && age < 2000);
+  nvb::DaemonStatus none;
+  assert(!nvb::ReadStatus("/tmp/nvb-test-status-missing.json", &none));
+  printf("TestStatusRoundTrip ok\n");
+}
+
 }  // namespace
 
 int main() {
@@ -67,6 +92,7 @@ int main() {
   TestRnnoiseTwoFrames();
   TestCudaStubPassthrough();
   TestConfigRoundTrip();
+  TestStatusRoundTrip();
   printf("ALL TESTS PASSED\n");
   return 0;
 }
