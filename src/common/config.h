@@ -18,6 +18,11 @@ struct AppConfig {
   // [cuda]
   int cuda_device_id = 0;
   std::string cuda_model = "deepfilternet";
+  // [maxine]
+  std::string maxine_lib;    // empty = libnv_audio_effects.so via ld path
+  std::string maxine_model;  // empty/shorthand = $NVB_MAXINE_DIR/models/...
+  std::string maxine_effect = "denoiser";
+  bool maxine_enable_vad = true;
 
   static std::string default_path();
   bool load(const std::string& path, std::string* err);

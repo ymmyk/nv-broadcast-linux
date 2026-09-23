@@ -291,8 +291,14 @@ int main(int argc, char** argv) {
 
   nvb::DenoiseConfig dcfg{cfg.suppression_db, cfg.vad_threshold,
                           cfg.keyboard_boost};
+  dcfg.maxine_lib = cfg.maxine_lib;
+  dcfg.maxine_model = cfg.maxine_model;
+  dcfg.maxine_effect = cfg.maxine_effect;
+  dcfg.maxine_enable_vad = cfg.maxine_enable_vad;
   std::unique_ptr<nvb::Denoiser> fx;
-  if (cfg.backend == "cuda")
+  if (cfg.backend == "maxine")
+    fx.reset(nvb::CreateMaxineDenoiser(dcfg));
+  else if (cfg.backend == "cuda")
     fx.reset(nvb::CreateCudaDenoiser(cfg.cuda_device_id, cfg.cuda_model));
   else
     fx.reset(nvb::CreateRnnoiseDenoiser());

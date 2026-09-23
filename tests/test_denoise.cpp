@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
@@ -61,6 +62,18 @@ void TestConfigRoundTrip() {
   printf("TestConfigRoundTrip ok\n");
 }
 
+void TestMaxineWithoutSdk() {
+  // No SDK in this environment: init must fail gracefully, never crash.
+  setenv("NVB_MAXINE_LIB", "/nonexistent/libnv_audio_effects.so", 1);
+  setenv("NVB_MAXINE_MODEL", "/nonexistent/denoiser_48k.trtpkg", 1);
+  std::unique_ptr<nvb::Denoiser> fx(nvb::CreateMaxineDenoiser(nvb::DenoiseConfig{}));
+  assert(!fx->init(48000, nvb::DenoiseConfig{}));
+  assert(fx->name() == "maxine");
+  unsetenv("NVB_MAXINE_LIB");
+  unsetenv("NVB_MAXINE_MODEL");
+  printf("TestMaxineWithoutSdk ok\n");
+}
+
 void TestStatusRoundTrip() {
   nvb::DaemonStatus st;
   st.running = true;
@@ -93,6 +106,7 @@ int main() {
   TestCudaStubPassthrough();
   TestConfigRoundTrip();
   TestStatusRoundTrip();
+  TestMaxineWithoutSdk();
   printf("ALL TESTS PASSED\n");
   return 0;
 }

@@ -62,6 +62,12 @@ bool AppConfig::load(const std::string& path, std::string* err) {
       } else if (section == "cuda") {
         if (k == "device_id") cuda_device_id = std::stoi(v);
         else if (k == "model") cuda_model = unquote(v);
+      } else if (section == "maxine") {
+        if (k == "lib") maxine_lib = unquote(v);
+        else if (k == "model") maxine_model = unquote(v);
+        else if (k == "effect") maxine_effect = unquote(v);
+        else if (k == "enable_vad")
+          maxine_enable_vad = (v == "true" || v == "1");
       }
     } catch (...) {
       if (err) *err = "bad value for " + k;
@@ -88,7 +94,11 @@ bool AppConfig::save(const std::string& path, std::string* err) const {
     << "vad_threshold   = " << vad_threshold << "\n"
     << "keyboard_boost  = " << keyboard_boost << "\n\n"
     << "[cuda]\ndevice_id = " << cuda_device_id << "\n"
-    << "model     = \"" << cuda_model << "\"\n";
+    << "model     = \"" << cuda_model << "\"\n\n"
+    << "[maxine]\nlib        = \"" << maxine_lib << "\"\n"
+    << "model      = \"" << maxine_model << "\"\n"
+    << "effect     = \"" << maxine_effect << "\"\n"
+    << "enable_vad = " << (maxine_enable_vad ? "true" : "false") << "\n";
   return true;
 }
 

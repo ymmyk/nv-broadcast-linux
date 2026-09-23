@@ -110,12 +110,19 @@ scripts/install.sh
 
 ## Maxine GPU backend (Broadcast-quality)
 
+> Access warning (Sep 2026): NVIDIA gates the Linux AFX SDK behind an
+> enterprise / sales-approved NGC account — a free account hits a
+> "subscribe / contact sales" wall. The backend stays ready if access ever
+> comes through, but the working path is DeepFilterNet below: no account,
+> near-Broadcast quality, CUDA optional.
+
 ```bash
 # 1. NVIDIA Developer account -> download Audio Effects SDK for Linux
 #    (accept the Maxine EULA) -> extract:
 mkdir -p ~/.local/share/nv-broadcast
-tar xf Audio_Effects_SDK_Linux.tar.gz -C ~/.local/share/nv-broadcast/maxine
+tar xf NVIDIA_AFX_SDK_Linux_<VERSION>.tar.gz -C ~/.local/share/nv-broadcast/maxine
 # expect: maxine/lib/libnv_audio_effects.so, maxine/models/denoiser_48k.trtpkg
+# (models may ship as a separate collection download — same NGC page, Files tab)
 
 # 2. If the .so complains about missing libcudart:
 sudo pacman -S cuda   # full toolkit; only needed if ldd shows cudart missing
@@ -130,6 +137,23 @@ No rebuild needed — the backend loads `libnv_audio_effects.so` at runtime.
 First `Load()` takes a few seconds and ~0.5 GB VRAM on the 3090. If a param
 name mismatches your SDK version, the daemon prints the numeric status for
 that exact call — paste it back and the key gets corrected.
+
+## DeepFilterNet track (open model, no account)
+
+The working Broadcast-quality path: DeepFilterNet (open weights, 48 kHz,
+excellent on keyboard clicks) via ONNX Runtime — CPU today, CUDA on the 3090
+with `onnxruntime-cuda` from Arch extra. Backend selection stays `backend =
+"deepfilter"` once implemented (currently the `cuda` stub holds its place).
+
+```bash
+# 1. Grab an ONNX release tarball from Rikorose/DeepFilterNet releases
+#    (any DeepFilterNet3/4 "*onnx*" asset) and unpack the .onnx file.
+# 2. Inspect its tensors (project-local env, CPU wheel is enough for this):
+uv venv && uv pip install onnxruntime
+uv run python scripts/inspect_onnx.py <model.onnx>
+# 3. Paste the full output back — the backend gets written against the real
+#    tensor names, and `sudo pacman -S onnxruntime-cuda` enables the GPU path.
+```
 
 ## Notes / limits
 

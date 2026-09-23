@@ -81,8 +81,9 @@ void RefreshDevices(Gui* g) {
 
 void LoadToWidgets(Gui* g) {
   gtk_editable_set_text(g->output_entry, g->cfg.output_name.c_str());
-  gtk_combo_box_set_active(GTK_COMBO_BOX(g->backend_combo),
-                           g->cfg.backend == "cuda" ? 1 : 0);
+  gtk_combo_box_set_active(
+      GTK_COMBO_BOX(g->backend_combo),
+      g->cfg.backend == "maxine" ? 1 : (g->cfg.backend == "cuda" ? 2 : 0));
   gtk_range_set_value(g->suppression, g->cfg.suppression_db);
   gtk_range_set_value(g->vad, g->cfg.vad_threshold);
   gtk_range_set_value(g->keyboard, g->cfg.keyboard_boost);
@@ -94,9 +95,8 @@ void SaveFromWidgets(Gui* g) {
   g->cfg.input_device =
       (in > 0 && in < (int)g->device_ids.size()) ? g->device_ids[in] : "";
   g->cfg.output_name = gtk_editable_get_text(g->output_entry);
-  g->cfg.backend =
-      gtk_combo_box_get_active(GTK_COMBO_BOX(g->backend_combo)) == 1 ? "cuda"
-                                                                    : "rnnoise";
+  int be = gtk_combo_box_get_active(GTK_COMBO_BOX(g->backend_combo));
+  g->cfg.backend = be == 1 ? "maxine" : (be == 2 ? "cuda" : "rnnoise");
   g->cfg.suppression_db = (float)gtk_range_get_value(g->suppression);
   g->cfg.vad_threshold = (float)gtk_range_get_value(g->vad);
   g->cfg.keyboard_boost = (float)gtk_range_get_value(g->keyboard);
@@ -214,6 +214,7 @@ void OnActivate(GtkApplication* app, gpointer data) {
   adw_action_row_set_subtitle(brow, "cuda = experimental GPU stub");
   g->backend_combo = GTK_COMBO_BOX_TEXT(gtk_combo_box_text_new());
   gtk_combo_box_text_append_text(g->backend_combo, "rnnoise");
+  gtk_combo_box_text_append_text(g->backend_combo, "maxine");
   gtk_combo_box_text_append_text(g->backend_combo, "cuda");
   gtk_widget_set_valign(GTK_WIDGET(g->backend_combo), GTK_ALIGN_CENTER);
   adw_action_row_add_suffix(brow, GTK_WIDGET(g->backend_combo));

@@ -41,7 +41,9 @@ target_include_directories(nvb_common PUBLIC src src/common)
 add_library(nvb_denoise STATIC
   src/rnnoise_backend.cpp
   src/cuda_backend.cpp
+  src/maxine_backend.cpp
 )
+target_link_libraries(nvb_denoise PRIVATE ${CMAKE_DL_LIBS})
 target_include_directories(nvb_denoise PUBLIC src)
 target_link_libraries(nvb_denoise PUBLIC nvb_common)
 if(RNNOISE_FOUND)

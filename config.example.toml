@@ -15,4 +15,14 @@ keyboard_boost  = 0.6        # 0..1 extra attenuation on key-click transients
 
 [cuda]
 device_id = 0
-model     = "deepfilternet"  # or "maxine" once implemented
+model     = "deepfilternet"  # experimental stub backend
+
+# NVIDIA Maxine (Broadcast-quality) GPU backend. Needs the Audio Effects SDK:
+# NVIDIA Developer account -> download Audio Effects SDK for Linux (accept the
+# Maxine EULA) -> extract to ~/.local/share/nv-broadcast/maxine so that
+# lib/libnv_audio_effects.so and models/denoiser_48k.trtpkg exist.
+[maxine]
+lib        = ""              # empty = libnv_audio_effects.so via loader path
+model      = ""              # empty/"denoiser_48k" = $NVB_MAXINE_DIR/models/denoiser_48k.trtpkg
+effect     = "denoiser"
+enable_vad = true
